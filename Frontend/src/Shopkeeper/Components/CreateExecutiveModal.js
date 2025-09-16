@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Axios from '../../Axios'
 
 const CreateExecutiveModal = (props) => {
     const[displayotpsection,setdisplayotpsection]=useState(false)
@@ -11,18 +12,21 @@ const CreateExecutiveModal = (props) => {
     const navigate=useNavigate()
     const getallcityandstate=async(token)=>{
         try {
-        const response=await fetch("http://localhost:3010/api/getallcitiesandstates",{
+        const response=await Axios.get("getallcitiesandstates",{
             headers:{
-                "Content-Type":"application/json",
                 "Authorization":token
             }
         })
-        const result=await response.json()
-        if(response.status===202)setdata(result.data)
-        else alert(result?.message)
+        if(response.status===202)setdata(response?.data?.data)
+        else alert(response?.data?.message)
         } catch (error) {
-            console.log(error);
-            alert("Something went wrong. Try again later") 
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if (error.request) {
+                alert('No response from server');
+            } else {
+                alert('An unexpected error occurred');
+            } 
         }
     }
     useEffect(()=>{
@@ -46,21 +50,24 @@ const CreateExecutiveModal = (props) => {
                 window.history.replaceState(null,null,"/")
                 return navigate("/",{replace:true})
             }
-            const response=await fetch("http://localhost:3010/api/verifyexecutive",{
-                method:"post",
-                body:JSON.stringify(obj),
+            const response=await Axios.post("verifyexecutive",obj,{
                 headers:{
                     "Content-Type":"application/json",
                     "Authorization":userinfo.Authorization
                 }
             })
-            const result=await response.json()
-            alert(result?.message)
+            alert(response?.data?.message)
             if(response.status===202) setdisplayotpsection(true)
-            setotploading(false)
         } catch (error) {
-            console.log(error);
-            alert("Something went wrong. Try again later")
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if (error.request) {
+                alert('No response from server');
+            } else {
+                alert('An unexpected error occurred');
+            }
+        } finally{
+            setotploading(false)
         }
     }
     const submit=async(e)=>{
@@ -74,24 +81,27 @@ const CreateExecutiveModal = (props) => {
                 window.history.replaceState(null,null,"/")
                 return navigate("/",{replace:true})
             }
-            const response=await fetch("http://localhost:3010/api/createexecutive",{
-                method:"post",
-                body:JSON.stringify({...obj,otp}),
+            const response=await Axios.post("createexecutive",{...obj,otp},{
                 headers:{
                     "Content-Type":"application/json",
                     "Authorization":userinfo.Authorization
                 }
             })
-            const result=await response.json()
-            alert(result?.message)
+            alert(response?.data?.message)
             if(response.status===201){
                 props.fun(false)
                 props.getallexecutives(userinfo.Authorization)
             }
-            setloading(false)
         } catch (error) {
-            console.log(error);
-            alert("Something went wrong. Try again later")
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if (error.request) {
+                alert('No response from server');
+            } else {
+                alert('An unexpected error occurred');
+            }
+        } finally{
+            setloading(false)
         }
     }    
   return (

@@ -2,6 +2,7 @@ import React,{useState} from 'react'
 import Title from "../../CommonComponents/Title"
 import Footer from "../../CommonComponents/Footer"
 import { useNavigate } from'react-router-dom'
+import Axios from '../../Axios'
 const AddTransactionListComponent = () => {
   const navigate=useNavigate()
   const [loading,setloading]=useState(false)
@@ -19,21 +20,23 @@ const AddTransactionListComponent = () => {
           window.history.replaceState(null,null,"/")
           return navigate("/",{replace:true})
         }
-        const response=await fetch("http://localhost:3010/api/addpayment/"+customerinfo.id,{
-          method:"post",
-          body:JSON.stringify(obj),
+        const response=await Axios.post("addpayment/"+customerinfo.id,obj,{
           headers:{
-            "Content-Type":"application/json",
             "Authorization":userinfo.Authorization
           }
         })
-        const result=await response.json()
-        alert(result?.message)
+        alert(response?.data?.message)
         if(response.status===201){
           navigate("/TransactionList")
         }
     } catch (error) {
-      alert("Something went wrong. Try again later")
+      if (error.response) {
+        alert(error.response.data.message);
+    } else if (error.request) {
+        alert('No response from server');
+    } else {
+        alert('An unexpected error occurred');
+    }
     } finally {
       return setloading(false)
     }

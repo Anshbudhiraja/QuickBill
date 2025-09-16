@@ -4,6 +4,7 @@ import Footer from '../../CommonComponents/Footer'
 import AddItemModal from './AddItemModal'
 import ChooseCustomerModal from './ChooseCustomerModal'
 import { useNavigate } from 'react-router-dom'
+import Axios from '../../Axios'
 
 const NewInvoice = ({setinvoices}) => {
   const[AddItemToggle,setAddItemToggle] = useState(false)
@@ -58,22 +59,23 @@ const NewInvoice = ({setinvoices}) => {
         if(!customer._id) return alert("Choose your Customer")
         if(items.length===0) return alert("Add products to your invoice")
         const ordereditems=items.map(item =>({id:item._id,quantity:item.quantity}))
-        const response=await fetch("http://localhost:3010/api/createInvoice/"+customer._id,{
-            method:"post",
-            body:JSON.stringify({ordereditems}),
+        const response=await Axios.post("createInvoice/"+customer._id,{ordereditems},{
             headers:{
-                "Content-Type":"application/json",
                 "Authorization":userinfo.Authorization
             }
         })     
-        const result=await response.json()
-        alert(result?.message)
+        alert(response?.data?.message)
         if(response.status===201){
-            setinvoices(result.data)
+            setinvoices(response?.data?.data)
         }
     } catch (error) {
-        console.log(error);
-        alert("Something went wrong. Please try again")
+        if (error.response) {
+            alert(error.response.data.message);
+        } else if (error.request) {
+            alert('No response from server');
+        } else {
+            alert('An unexpected error occurred');
+        }
     } finally{
         return setloading(false)
     }

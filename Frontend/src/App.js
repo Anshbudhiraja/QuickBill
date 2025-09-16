@@ -16,6 +16,7 @@ import ExecutiveAddTransaction from './Executive/Pages/ExecutiveAddTransaction'
 import ExecutiveProducts from './Executive/Pages/ExecutiveProducts'
 import ExecutiveInvoices from './Executive/Pages/ExecutiveInvoices'
 import AllProducts from './Shopkeeper/Pages/AllProducts'
+import ComingSoon from './Executive/ComingSoon/ComingSoon'
 const App = () => {
   return (
     <div>
@@ -38,12 +39,13 @@ const App = () => {
           {/* login page */}
           <Route path='/' element={<SignIn/>}/>
           {/* executive */}
-          <Route path='/Executive' element={<Navigate to="/ExecutiveInvoices" replace/>}></Route>
+          <Route path='/Executive' element={<ComingSoon/>}></Route>
+          {/* <Route path='/Executive' element={<Navigate to="/ExecutiveInvoices" replace/>}></Route>
           <Route path='/ExecutiveInvoices' element={<ExecutiveInvoices/>}></Route>
           <Route path='/ExecutiveProducts' element={<ExecutiveProducts/>}></Route>
           <Route path='/ExecutiveCustomers' element={<ExecutiveCustomers/>}></Route>
           <Route path='/ExecutiveTransactionlist' element={<ExecutiveTransactionList/>}></Route>
-          <Route path='/ExecutiveAddTransaction' element={<ExecutiveAddTransaction/>}></Route>
+          <Route path='/ExecutiveAddTransaction' element={<ExecutiveAddTransaction/>}></Route> */}
         </Routes>
       </BrowserRouter>
     </div>

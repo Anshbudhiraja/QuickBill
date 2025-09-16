@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Footer from "../../CommonComponents/Footer"
 import Title from "../../CommonComponents/Title"
-import axios from "axios"
+import Axios from '../../Axios'
 const DashboardComponent = () => {
   const navigate=useNavigate()
   const[data,setdata]=useState({})
@@ -10,45 +10,59 @@ const DashboardComponent = () => {
   const[transactions,settransactions]=useState([])
   const getAllData=async(token)=>{
     try {
-      const response=await axios.get("http://localhost:3010/api/getSalesInfo",{
+      const response=await Axios.get("getSalesInfo",{
         headers:{
-          "Content-Type":"application/json",
           "Authorization":token
         }
       })      
       if(response.status===202) setdata(response?.data?.data)
       else alert(response?.data?.message)
     } catch (error) {
-      return alert("Something went wrong. Try again later")
+      if (error.response) {
+        alert(error.response.data.message);
+    } else if (error.request) {
+        alert('No response from server');
+    } else {
+        alert('An unexpected error occurred');
+    }
     }
   }
   const getTransactions=async(token)=>{
     try {
-      const response=await axios.get("http://localhost:3010/api/latestTransactions",{
+      const response=await Axios.get("latestTransactions",{
         headers:{
-          "Content-Type":"application/json",
           "Authorization":token
         }
       })
       if(response.status===202) settransactions(response?.data?.data)
       else alert(response?.data?.message)
     } catch (error) {
-      return alert("Something went wrong. Try again later")
+      if (error.response) {
+        alert(error.response.data.message);
+    } else if (error.request) {
+        alert('No response from server');
+    } else {
+        alert('An unexpected error occurred');
+    }
     }
   }
   const getInvoices=async(token)=>{
     try {
-      const response=await fetch("http://localhost:3010/api/latestInvoices",{
+      const response=await Axios.get("latestInvoices",{
         headers:{
-          "Content-Type":"application/json",
           "Authorization":token
         }
       })
-      const result=await response.json()
-      if(response.status===202) setinvoices(result.data)
-      else alert(result?.message)
+      if(response.status===202) setinvoices(response?.data?.data)
+      else alert(response?.data?.message)
     } catch (error) {
-      return alert("Something went wrong. Try again later")
+      if (error.response) {
+        alert(error.response.data.message);
+    } else if (error.request) {
+        alert('No response from server');
+    } else {
+        alert('An unexpected error occurred');
+    }
     }
   }
   useEffect(()=>{

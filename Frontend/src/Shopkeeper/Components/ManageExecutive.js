@@ -3,6 +3,7 @@ import Footer from '../../CommonComponents/Footer'
 import Title from '../../CommonComponents/Title'
 import CreateExecutiveModal from './CreateExecutiveModal'
 import { useNavigate } from 'react-router-dom'
+import Axios from '../../Axios'
 
 const ManageExecutive = () => {
     const[Toggle,setToggle]=useState(false)
@@ -14,18 +15,21 @@ const ManageExecutive = () => {
     const usersperpage=5
     const getallexecutives=async(token)=>{
         try {
-            const response=await fetch("http://localhost:3010/api/getallexecutives",{
+            const response=await Axios.get("getallexecutives",{
                 headers:{
-                    "Content-Type":"application/json",
                     "Authorization":token
                 }
             })
-            const result=await response.json()
-            if(response.status===202) setdata(result.data)
-            else alert(result?.message)
+            if(response.status===202) setdata(response?.data?.data)
+            else alert(response?.data?.message)
         } catch (error) {
-            console.log(error);
-            alert("Something went wrong. Try again later")
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if (error.request) {
+                alert('No response from server');
+            } else {
+                alert('An unexpected error occurred');
+            }
         }
     }
     useEffect(()=>{
@@ -47,7 +51,7 @@ const ManageExecutive = () => {
             settotalpages(totalpage)
         }
     },[data,currentpage])
-    const makeenable=async(id)=>{
+    const changeservice=async(id,type)=>{
         try {
             const userinfo=JSON.parse(localStorage.getItem("Userinfo"))
             if(!userinfo || !userinfo.Authorization){
@@ -56,45 +60,21 @@ const ManageExecutive = () => {
                 window.history.replaceState(null,null,"/")
                 return navigate("/",{replace:true})
             }
-            const response=await fetch("http://localhost:3010/api/enableexecutive",{
-                method:"put",
-                body:JSON.stringify({id}),
+            const response=await Axios.put(type,{id},{
                 headers:{
-                    "Content-Type":"application/json",
                     "Authorization":userinfo.Authorization
                 }
             })
-            const result=await response.json()
-            alert(result?.message)
+            alert(response?.data?.message)
             if(response.status===202) await getallexecutives(userinfo.Authorization);
         } catch (error) {
-          console.log(error);
-          alert("Something went wrong. Try again later")
-        }
-    }
-    const makedisable=async(id)=>{
-        try {
-            const userinfo=JSON.parse(localStorage.getItem("Userinfo"))
-            if(!userinfo || !userinfo.Authorization){
-                localStorage.clear();
-                alert("Unauthorised user")
-                window.history.replaceState(null,null,"/")
-                return navigate("/",{replace:true})
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if (error.request) {
+                alert('No response from server');
+            } else {
+                alert('An unexpected error occurred');
             }
-            const response=await fetch("http://localhost:3010/api/disableexecutive",{
-                method:"put",
-                body:JSON.stringify({id}),
-                headers:{
-                    "Content-Type":"application/json",
-                    "Authorization":userinfo.Authorization
-                }
-            })
-            const result=await response.json()
-            alert(result?.message)
-            if(response.status===202) await getallexecutives(userinfo.Authorization);
-        } catch (error) {
-          console.log(error);
-          alert("Something went wrong. Try again later")
         }
     }
   return (
@@ -155,7 +135,7 @@ const ManageExecutive = () => {
                                                             <td>{obj?.service?<span className="badge bg-success-subtle text-success p-2">Enabled</span>:<span className="badge bg-danger-subtle text-danger p-2">Disabled</span>}</td>
                                                             <td>
                                                             <div className="form-check form-switch">
-                                                                {obj?.service?<input className="form-check-input" checked={true} onChange={()=>makedisable(obj._id)} type="checkbox" role="switch" id="switch1" />:<input className="form-check-input" checked={false} onChange={()=>makeenable(obj._id)} type="checkbox" role="switch" id="switch1" />}
+                                                                {obj?.service?<input className="form-check-input" checked={true} onChange={()=>changeservice(obj._id,"disable")} type="checkbox" role="switch" id="switch1" />:<input className="form-check-input" checked={false} onChange={()=>changeservice(obj._id,"enable")} type="checkbox" role="switch" id="switch1" />}
                                                                 <label className="form-check-label" htmlFor="switch1" />
                                                             </div>
                                                             </td>

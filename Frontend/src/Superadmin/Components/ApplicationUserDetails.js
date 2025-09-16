@@ -4,6 +4,7 @@ import Title from '../../CommonComponents/Title'
 import CreateAccountModal from './CreateAccountModal'
 import {useNavigate} from "react-router-dom"
 import Datatables from "react-data-table-component"
+import Axios from '../../Axios'
 const ApplicationUserDetails = () => {
     const[Toggle,setToggle]=useState(false)
     const[data,setdata]=useState([])
@@ -19,21 +20,24 @@ const ApplicationUserDetails = () => {
     },[])
     const getallusers=async(token)=>{
      try {
-        const response= await fetch("http://localhost:3010/api/getallusers",{
+        const response= await Axios.get("getallusers",{
             headers:{
-                "Content-Type":"application/json",
                 "Authorization":token
             }
-          })
-          const result=await response.json()
-          if(response.status===202) setdata(result.data)
-          else alert(result?.message)
+        })
+        if(response.status===202) setdata(response?.data?.data)
+        else alert(response?.data?.message)
      } catch (error) {
-        console.log(error);
-        alert("Something went wrong. Try again later")
+        if (error.response) {
+            alert(error.response.data.message);
+        } else if (error.request) {
+            alert('No response from server');
+        } else {
+            alert('An unexpected error occurred');
+        }
      }
     }
-    const makeenable=async(id)=>{
+    const changeservice=async(id,type)=>{
         try {
             const userinfo=JSON.parse(localStorage.getItem("Userinfo"))
             if(!userinfo || !userinfo.Authorization){
@@ -42,45 +46,21 @@ const ApplicationUserDetails = () => {
                 window.history.replaceState(null,null,"/")
                 return navigate("/",{replace:true})
             }
-            const response=await fetch("http://localhost:3010/api/enable",{
-                method:"put",
-                body:JSON.stringify({id}),
+            const response=await Axios.put(type,{id},{
                 headers:{
-                    "Content-Type":"application/json",
                     "Authorization":userinfo.Authorization
                 }
             })
-            const result=await response.json()
-            alert(result?.message)
+            alert(response?.data?.message)
             if(response.status===202) await getallusers(userinfo.Authorization);
         } catch (error) {
-          console.log(error);
-          alert("Something went wrong. Try again later")
-        }
-    }
-    const makedisable=async(id)=>{
-        try {
-            const userinfo=JSON.parse(localStorage.getItem("Userinfo"))
-            if(!userinfo || !userinfo.Authorization){
-                localStorage.clear();
-                alert("Unauthorised user")
-                window.history.replaceState(null,null,"/")
-                return navigate("/",{replace:true})
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if (error.request) {
+                alert('No response from server');
+            } else {
+                alert('An unexpected error occurred');
             }
-            const response=await fetch("http://localhost:3010/api/disable",{
-                method:"put",
-                body:JSON.stringify({id}),
-                headers:{
-                    "Content-Type":"application/json",
-                    "Authorization":userinfo.Authorization
-                }
-            })
-            const result=await response.json()
-            alert(result?.message)
-            if(response.status===202) await getallusers(userinfo.Authorization);
-        } catch (error) {
-          console.log(error);
-          alert("Something went wrong. Try again later")
         }
     }
 
@@ -111,11 +91,17 @@ const ApplicationUserDetails = () => {
         },
         {
             name: 'Action',
-            selector: row =>row?.service?<input className="form-check-input" checked={true} onChange={()=>makedisable(row._id)} type="checkbox" role="switch" id="switch1" />:<input className="form-check-input" checked={false} onChange={()=>makeenable(row._id)} type="checkbox" role="switch" id="switch1" />,
+            selector: row =>{
+                return(
+                    <div className="form-check form-switch">
+                        {row?.service?<input className="form-check-input" checked={true} onChange={()=>changeservice(row._id,"disable")} type="checkbox" role="switch" id="switch1" />:<input className="form-check-input" checked={false} onChange={()=>changeservice(row._id,"enable")} type="checkbox" role="switch" id="switch1" />}
+                        <label className="form-check-label" htmlFor="switch1" />
+                    </div>
+                )
+            },
         },
-      ]
-
-      const ExpandedComponent=({data})=>{
+    ]
+    const ExpandedComponent=({data})=>{
         const columns = [
             {
             name: 'Name',
@@ -143,16 +129,22 @@ const ApplicationUserDetails = () => {
         },
         {
             name: 'Action',
-            selector: row =>row?.service?<input className="form-check-input" checked={true} onChange={()=>makedisable(row._id)} type="checkbox" role="switch" id="switch1" />:<input className="form-check-input" checked={false} onChange={()=>makeenable(row._id)} type="checkbox" role="switch" id="switch1" />,
+            selector: row =>{
+                return(
+                    <div className="form-check form-switch">
+                        {row?.service?<input className="form-check-input" checked={true} onChange={()=>changeservice(row._id,"disable")} type="checkbox" role="switch" id="switch1" />:<input className="form-check-input" checked={false} onChange={()=>changeservice(row._id,"enable")} type="checkbox" role="switch" id="switch1" />}
+                        <label className="form-check-label" htmlFor="switch1" />
+                    </div>
+                )
+            },
         },
         ];
         return (
             <Datatables selectableRows
                 columns={columns}
-                data={data.executives}
-            />
+                data={data.executives}/>
             )
-      }
+    }
   return (
     <div className='modal-open' >
     <div className="main-content">
@@ -186,7 +178,7 @@ const ApplicationUserDetails = () => {
                         <div className="card">
                             <div className="card-body">
                                 <div className="table-responsive table-card">
-                                    <Datatables data={data} columns={Columns} expandableRows expandableRowsComponent={ExpandedComponent} pagination highlightOnHover/>
+                                    <Datatables className='table-hover table-nowrap align-middle mb-0' data={data} columns={Columns} expandableRows expandableRowsComponent={ExpandedComponent} pagination highlightOnHover/>
                                     {/* <table className="table table-hover table-nowrap align-middle mb-0">
                                         <thead>
                                             <tr className="text-muted text-uppercase">
@@ -212,7 +204,7 @@ const ApplicationUserDetails = () => {
                                                             <td>{obj?.service?<span className="badge bg-success-subtle text-success p-2">Enabled</span>:<span className="badge bg-danger-subtle text-danger p-2">Disabled</span>}</td>
                                                             <td>
                                                             <div className="form-check form-switch">
-                                                                {obj?.service?<input className="form-check-input" checked={true} onChange={()=>makedisable(obj._id)} type="checkbox" role="switch" id="switch1" />:<input className="form-check-input" checked={false} onChange={()=>makeenable(obj._id)} type="checkbox" role="switch" id="switch1" />}
+                                                                {obj?.service?<input className="form-check-input" checked={true} onChange={()=>changeservice(obj._id,"disable")} type="checkbox" role="switch" id="switch1" />:<input className="form-check-input" checked={false} onChange={()=>changeservice(obj._id,"enable")} type="checkbox" role="switch" id="switch1" />}
                                                                 <label className="form-check-label" htmlFor="switch1" />
                                                             </div>
                                                             </td>
@@ -223,20 +215,6 @@ const ApplicationUserDetails = () => {
                                         </tbody>
                                     </table> */}
                                 </div>
-                            </div>
-                        </div>
-                        <div className="row align-items-center mb-2 gy-3">
-                            <div className="col-md-5">
-                                {/* <p className="mb-0 text-muted"> Showing <b>{(currentpage - 1) * usersperpage + 1}</b> to{" "}<b>{Math.min(currentpage * usersperpage, data.length)}</b>{" "} of <b>{data.length}</b> results</p> */}
-                            </div>
-                            <div className="col-sm-auto ms-auto">
-                                {/* <nav aria-label="...">
-                                    <ul className="pagination mb-0">
-                                        {currentpage!==1 ? <li style={{cursor:"pointer"}} className="page-item" onClick={()=>setcurrentpage(currentpage-1)}><span className="page-link">Previous</span></li>:<li className="page-item disabled"><span className="page-link">Previous</span></li>}
-                                        {Array.from({ length: totalpages }, (_, index)=><li key={index} onClick={() => setcurrentpage(index + 1)} className={currentpage===index+1?'page-item active':'page-item'}><a className="page-link">{index+1}</a></li>)}
-                                        {currentpage!==totalpages ? <li className="page-item" onClick={() => setcurrentpage(currentpage + 1)}><a className="page-link" href="#">Next</a></li>:<li className="page-item disabled"><a className="page-link" href="#">Next</a></li>}
-                                    </ul>
-                                </nav> */}
                             </div>
                         </div>
                     </div>

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import AddCustomerModal from './AddCustomerModal'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import Title from "../../CommonComponents/Title"
 import Footer from "../../CommonComponents/Footer"
+import Axios from '../../Axios'
 const CustomerComponent = () => {
    const [CustomerToggle,setCustomerToggle]=useState(false)
    const navigate=useNavigate()
@@ -13,18 +14,21 @@ const CustomerComponent = () => {
    const customersperpage=5
    const getallcustomers=async(token)=>{
     try {
-        const response=await fetch("http://localhost:3010/api/getallcustomers",{
+        const response=await Axios.get("getallcustomers",{
             headers:{
-                "Content-Type":"application/json",
                 "Authorization":token
             }
         })
-        const result=await response.json()
-        if(response.status===202) setdata(result.data)
-        else alert(result?.message)
+        if(response.status===202) setdata(response?.data?.data)
+        else alert(response?.data?.message)
     } catch (error) {
-        console.log(error);
-        alert("Something went wrong. Try again later")
+        if (error.response) {
+            alert(error.response.data.message);
+        } else if (error.request) {
+            alert('No response from server');
+        } else {
+            alert('An unexpected error occurred');
+        }
     }
    }
    useEffect(()=>{

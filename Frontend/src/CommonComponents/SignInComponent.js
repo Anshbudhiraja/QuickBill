@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {useNavigate} from "react-router-dom"
+import Axios from '../Axios'
 const SignInComponent = () => {
     const[passwordicon,setpasswordicon]=useState(false)
     const[obj,setobj]=useState({})
@@ -11,24 +12,23 @@ const SignInComponent = () => {
        try {
         e.preventDefault()
         setloading(true)
-        const response= await fetch("http://localhost:3010/api/login",{
-            body:JSON.stringify(obj),
-            method:"post",
-            headers:{
-                "Content-Type":"application/json"
-            }
-        })
-        const result=await response.json()
-        alert(result?.message);
+        const response=await Axios.post("login",obj)
+        alert(response?.data?.message);
         if(response.status===202){
          localStorage.clear()
-         localStorage.setItem("Userinfo",JSON.stringify({"Authorization":result.data.token,"Rememberme":rememberme}))
-         navigate("/"+result.data.role)
+         localStorage.setItem("Userinfo",JSON.stringify({"Authorization":response?.data?.data.token,"Rememberme":rememberme}))
+         navigate("/"+response?.data?.data.role)
         }
-        setloading(false)
        } catch (error) {
-        console.log(error);
-        alert("Something went wrong. Try again later.")
+        if (error.response) {
+            alert(error.response.data.message);
+        } else if (error.request) {
+            alert('No response from server');
+        } else {
+            alert('An unexpected error occurred');
+        }
+       } finally{
+        setloading(false)
        }
     }
     useEffect(()=>{
@@ -40,23 +40,25 @@ const SignInComponent = () => {
     },[])
     const fetchuserdetails=async(token,remember)=>{
      try {
-        const response= await fetch("http://localhost:3010/api/fetchuserdetails",{
-            method:"post",
+        const response= await Axios.post("fetchuserdetails",{},{
             headers:{
-                "Content-Type":"application/json",
                 "Authorization":token
             }
         })
-        const result=await response.json()
-        alert(result?.message)
+        alert(response?.data?.message)
         if(response.status===202){
          localStorage.clear()
-         localStorage.setItem("Userinfo",JSON.stringify({"Authorization":result.data.token,"Rememberme":remember}))
-         navigate("/"+result?.data?.role,{replace:true})
+         localStorage.setItem("Userinfo",JSON.stringify({"Authorization":response?.data?.data?.token,"Rememberme":remember}))
+         navigate("/"+response?.data?.data?.role,{replace:true})
         }
      } catch (error) {
-        console.log(error);
-        alert("Something went wrong. Try again later.")
+        if (error.response) {
+            alert(error.response.data.message);
+        } else if (error.request) {
+            alert('No response from server');
+        } else {
+            alert('An unexpected error occurred');
+        }
      }
     }    
     return(
@@ -68,7 +70,7 @@ const SignInComponent = () => {
                         <div  className="customcss">
                             <div className="d-flex flex-column h-100 py-0 py-xl-4">
                                 <div className="text-center mb-5">
-                                    <a><span className="logo-lg"><img src="assets/images/logo-dark.png" height={21} /></span></a>
+                                    <a><span className="logo-lg"><img src="assets/images/Quickbill.png" height={"60px"} /></span></a>
                                 </div>
                                 <div className="card my-auto ">
                                     <div className="col-lg-12">

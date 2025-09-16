@@ -4,6 +4,7 @@ import Footer from '../../CommonComponents/Footer'
 import Title from '../../CommonComponents/Title'
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import Axios from '../../Axios';
 const InvoiceDetails = ({data}) => {
     const navigate=useNavigate()
     const[customer,setcustomer]=useState({})
@@ -24,34 +25,40 @@ const InvoiceDetails = ({data}) => {
     FutureDate.setDate(today.getDate() + 7)
     const getCustomer=async(token,id)=>{
     try {
-        const response=await fetch("http://localhost:3010/api/getCustomer/"+id,{
+        const response=await Axios.get("getCustomer/"+id,{
             headers:{
-                "Content-Type":"application/json",
                 "Authorization":token
             }
         })   
-        const result = await response.json()
-        if(response.status===202) setcustomer(result?.data) 
-        else alert(result?.message) 
+        if(response.status===202) setcustomer(response?.data?.data) 
+        else alert(response?.data?.message) 
     } catch (error) {
-     console.log(error);
-     alert("Something went wrong. Try again later")
+        if (error.response) {
+            alert(error.response.data.message);
+        } else if (error.request) {
+            alert('No response from server');
+        } else {
+            alert('An unexpected error occurred');
+        }
     }
     }
     const getShopkeeper=async(token)=>{
     try {
-        const response=await fetch("http://localhost:3010/api/getShopkeeper",{
+        const response=await Axios.get("getShopkeeper",{
             headers:{
-                "Content-Type":"application/json",
                 "Authorization":token
             }
         })   
-        const result = await response.json()
-        if(response.status===202) setshopkeeper(result?.data)
-        else alert(result?.message)   
+        if(response.status===202) setshopkeeper(response?.data?.data)
+        else alert(response?.data?.message)   
     } catch (error) {
-     console.log(error);
-     alert("Something went wrong. Try again later")
+        if (error.response) {
+            alert(error.response.data.message);
+        } else if (error.request) {
+            alert('No response from server');
+        } else {
+            alert('An unexpected error occurred');
+        }
     }
     }
     useEffect(()=>{

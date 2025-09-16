@@ -23,18 +23,18 @@ const logout=()=>{
                             <div className="navbar-brand-box horizontal-logo">
                                 <Link to={'/SuperAdminDashboard'} className="logo logo-dark">
                                     <span className="logo-sm">
-                                        <img src="assets/images/logo-sm.png" height={22} />
+                                        <img src="assets/images/Quickbill.png" height={22} />
                                     </span>
                                     <span className="logo-lg">
-                                        <img src="assets/images/logo-dark.png" height={21} />
+                                        <img src="assets/images/Quickbill.png" height={21} />
                                     </span>
                                 </Link>
                                 <Link to={'/SuperAdminDashboard'} className="logo logo-light">
                                     <span className="logo-sm">
-                                        <img src="assets/images/logo-sm.png" height={22} />
+                                        <img src="assets/images/Quickbill.png" height={22} />
                                     </span>
                                     <span className="logo-lg">
-                                        <img src="assets/images/logo-light.png" height={21} />
+                                        <img src="assets/images/Quickbill.png" height={21} />
                                     </span>
                                 </Link>
                             </div>

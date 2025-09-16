@@ -2,6 +2,7 @@ import React from 'react'
 import Footer from '../../CommonComponents/Footer'
 import Title from '../../CommonComponents/Title'
 import { useNavigate } from 'react-router-dom'
+import Axios from '../../Axios'
 
 const ReviewExcelData = ({data,setdata}) => {
     const navigate=useNavigate()
@@ -14,20 +15,21 @@ const ReviewExcelData = ({data,setdata}) => {
                 window.history.replaceState(null,null,"/")
                 return navigate("/",{replace:true})
             } 
-            const response=await fetch("http://localhost:3010/api/addmultipleproducts",{
-                method:"post",
-                body:JSON.stringify({items:data}),
+            const response=await Axios.post("addmultipleproducts",{items:data},{
                 headers:{
-                    "Content-Type":"application/json",
                     "Authorization":userinfo.Authorization
                 }
             })
-            const result=await response.json()
-            alert(result?.message)
+            alert(response?.data?.message)
             if(response.status===201) navigate("/AllProducts")
         } catch (error) {
-            console.log(error);
-            alert("Something went wrong. Try again later.")
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if (error.request) {
+                alert('No response from server');
+            } else {
+                alert('An unexpected error occurred');
+            }
         }
     }
     const discard=()=>{

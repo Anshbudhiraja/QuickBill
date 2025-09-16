@@ -1,0 +1,31 @@
+.coming-soon {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #fff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.coming-soon .content {
+  max-width: 600px;
+  padding: 20px;
+}
+
+.coming-soon h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.coming-soon h2 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  color: #38bdf8;
+}
+
+.coming-soon p {
+  font-size: 1rem;
+  color: #cbd5e1;
+}

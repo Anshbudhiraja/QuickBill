@@ -1,5 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import Axios from '../../Axios'
 
 const EditProductModal = (props) => {
     const set=(event)=>{props.setobj({...props.obj,[event.target.name]:event.target.value})}
@@ -15,21 +16,23 @@ const EditProductModal = (props) => {
                 window.history.replaceState(null,null,"/")
                 return navigate("/",{replace:true})
             }
-            const response=await fetch("http://localhost:3010/api/updateproduct/"+props.id,{
-                method:"put",
-                body:JSON.stringify(props.obj),
+            const response=await Axios.put("updateproduct/"+props.id,props.obj,{
                 headers:{
-                    "Content-Type":"application/json",
                     "Authorization":userinfo.Authorization
                 }
             })
-            const result=await response.json()
-            alert(result?.message)
+            alert(response?.data?.message)
             if(response.status===202){await props.getallproducts(userinfo.Authorization);props.setToggle(false);props.setid(null);props.setobj({})}
-            props.setloading(false)
         } catch (error) {
-            console.log(error);
-            alert("Something went wrong. Try again later.")
+            if (error.response) {
+                alert(error.response.data.message);
+            } else if (error.request) {
+                alert('No response from server');
+            } else {
+                alert('An unexpected error occurred');
+            }
+        } finally{
+            props.setloading(false)
         }
     }
     return (

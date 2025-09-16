@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Footer from "../../CommonComponents/Footer"
 import Title from "../../CommonComponents/Title"
+import Axios from '../../Axios'
 const TransactionListComponent = () => {
   const[transactions,settransactions] =useState([])
   const navigate=useNavigate()
@@ -17,18 +18,21 @@ const TransactionListComponent = () => {
   },[])
   const getalltransactions=async(token,id)=>{
     try {
-        const response=await fetch("http://localhost:3010/api/getalltransactions/"+id,{
+        const response=await Axios.get("getalltransactions/"+id,{
             headers:{
-                "Content-Type":"application/json",
                 "Authorization":token
             }
         })
-        const result=await response.json()
-        if(response.status===202) settransactions(result.data)
-        else alert(result?.message)
+        if(response.status===202) settransactions(response?.data?.data)
+        else alert(response?.data?.message)
     } catch (error) {
-        console.log(error);
-        alert("Something went wrong. Try again later")
+      if (error.response) {
+        alert(error.response.data.message);
+    } else if (error.request) {
+        alert('No response from server');
+    } else {
+        alert('An unexpected error occurred');
+    }
     }
    }
 return(
@@ -76,7 +80,7 @@ return(
                     </tr>
                   </thead>
                   <tbody>
-                    { transactions && transactions.length!==0 && transactions?.map((transaction,index) => (
+                    { transactions && transactions.length!==0 ? transactions?.map((transaction,index) => (
                         <tr key={index}>
                           <td>{transaction.InvoiceNo || transaction.RecieptNo}</td>
                           <td>{new Date(transaction.createdAt).toLocaleDateString()}</td>
@@ -86,7 +90,7 @@ return(
                           <td>{transaction.TotalDiscount ? `₹${transaction.TotalDiscount}/-`:" - " }</td>
                           <td>{transaction.TotalProfit ? `₹${transaction.TotalProfit}/-` :" - "}</td>
                         </tr>
-                      ))
+                      )):<tr><td colSpan={7} className='text-center'>No transaction found</td></tr>
                     }
                   </tbody>
                 </table>
