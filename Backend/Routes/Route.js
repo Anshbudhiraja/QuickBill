@@ -1,24 +1,24 @@
 const express = require("express");
+const jwt=require("jsonwebtoken");
+const mongoose = require("mongoose");
 const { generateotp, verifyotp } = require("../Services/OtpService/OtpService");
 const {otptoemailforverification} = require("../Services/EmailService/EmailService");
+const HandleResponse=require("../HandleResponse/HandleResponse")
+const checkuserdetails = require("../Middlewares/Checkuserdetails");
 const { User, Shopkeeper, Executive } = require("../Model/UserModel/UserModel");
 const Product=require("../Model/ProductModel/ProductModel")
-const HandleResponse=require("../HandleResponse/HandleResponse")
-const jwt=require("jsonwebtoken");
-const checkuserdetails = require("../Middlewares/Checkuserdetails");
 const Customer = require("../Model/CustomerModel/CustomerModel");
 const { Invoice, Transaction, Payment } = require("../Model/TransactionModel/TransactionModel");
-const { default: mongoose } = require("mongoose");
 const OrderedItems = require("../Model/OrderedItemModel/OrderedItemModel");
 const Routes = express.Router();
 
-Routes.get("/HealthCheckApi", async (req, resp) =>HandleResponse(resp,202,"Server Health is Okay"))
+Routes.get("/", async (req, resp) =>HandleResponse(resp,202,"Server Health is Okay"))
 Routes.post("/verifyuser",checkuserdetails,async (req, resp) => {
   try {
     const { name, phone, email, password, address, city, state,role,executiveof } = req.body;
 
     if (!name || !phone || !email || !password || !city || city==="None" || !address || !state || state==="None" || !role) return HandleResponse(resp,404,"Field is Empty")
-
+    if(typeof phone !== "number") return HandleResponse(resp,404,"Invalid Phone Number")
     const userRoleChecker=["Shopkeeper","Executive"]
     if(!userRoleChecker.includes(role)) return HandleResponse(resp,404,"This role is not exists")
 
@@ -42,7 +42,8 @@ Routes.post("/createuser",checkuserdetails,async (req, resp) => {
     const { name, phone, email, address, password, city, state,role, otp,executiveof } =req.body;
 
     if (!name || !phone || !email || !address || !city || city==="None" || !state || state==="None" || !password ||!role) return HandleResponse(resp,404,"Field is Empty")
-
+    if(typeof phone !== "number") return HandleResponse(resp,404,"Invalid Phone Number")
+    
     if (!otp) return HandleResponse(resp,404,"Enter the otp");
 
     const userRoleChecker=["Shopkeeper","Executive"]
@@ -56,8 +57,8 @@ Routes.post("/createuser",checkuserdetails,async (req, resp) => {
       if(!mongoose.isValidObjectId(executiveof)) return HandleResponse(resp,401,"Invalid Shopkeeper id")
       const existingShopkeeper=await Shopkeeper.findOne({_id:executiveof})
       if(!existingShopkeeper) return HandleResponse(resp,404,"The Shopkeeper belong to this id is not exists")
-    }    
-
+    }
+    
     const response = verifyotp(email, otp);
     if (!response.status) return HandleResponse(resp,404,response.message);
 
@@ -70,6 +71,7 @@ Routes.post("/createuser",checkuserdetails,async (req, resp) => {
     return HandleResponse(resp,201,"Executive Account created successfully",result); 
     }
   } catch (error) {
+    console.log(error);
     return HandleResponse(resp,500,"Internal Server error",null,error)
   }
 });
@@ -123,7 +125,6 @@ Routes.put("/disable",checkuserdetails, async (req, resp) => {
 Routes.get("/getallusers",checkuserdetails,async(req,resp)=>{
   try {
     const users = await User.aggregate([{ $match: { role: "Shopkeeper" } },{ $lookup: {from: "users",localField: "_id",foreignField: "executiveof",as: "executives"}}, {$project: {password: 0, "executives.password": 0}}]).exec();
-    // const users = await User.find({role:{$ne:'Superadmin'}}).select("-password")
     if(users.length===0) return HandleResponse(resp,400,"No user found")
     return HandleResponse(resp,202,"Users fetched successfully",users)
   } catch (error) {
@@ -478,10 +479,24 @@ Routes.get("/getalltransactions/:id",checkuserdetails,async(req,resp)=>{
   }
 })
 
+
+async function generateRecieptNumber(shopkeeperId) {
+  const lastreciept = await Payment.findOne({shopkeeperId}).sort({ _id: -1 });
+
+  let newReciept;
+  if (lastreciept) {
+    let lastNumber = parseInt(lastreciept.RecieptNo.split('-')[1]) + 1;
+    newReciept = `Reciept-${lastNumber.toString().padStart(5, '0')}`;
+  } else {
+    newReciept = 'Reciept-00001';
+  }
+
+   return newReciept;
+}
 Routes.post("/addpayment/:id",checkuserdetails,async(req,resp)=>{
   try {
-    const {RecieptNo,payment,Description}=req.body
-    if(!RecieptNo || !payment) return HandleResponse(resp,404,"Field is Empty")
+    const {payment,Description}=req.body
+    if(!payment) return HandleResponse(resp,404,"Amount is required")
 
     const {id}=req.params
     if(!id ||!mongoose.isValidObjectId(id)) return HandleResponse(resp,404,"Customer is not valid")
@@ -491,9 +506,10 @@ Routes.post("/addpayment/:id",checkuserdetails,async(req,resp)=>{
 
 
     existingCustomer.balance-=payment
-    const updatedCustomer=await Customer.updateOne({_id:id,customerof:req.user._id},{$set:{balance:existingCustomer.balance}})
-    const result=await Payment.create({shopkeeperId:req.user._id,customerId:id,RecieptNo,payment,Description})
-    return HandleResponse(resp,201,"Customer updated successfully",{updatedCustomer,result})
+    await existingCustomer.save()
+    const reciept=generateRecieptNumber(req.user._id)
+    const result=await Payment.create({shopkeeperId:req.user._id,customerId:id,RecieptNo:reciept,payment,Description})
+    return HandleResponse(resp,201,"Customer updated successfully",result)
   } catch (error) {
     return HandleResponse(resp,500,"Internal Server Error",null,error)
   }

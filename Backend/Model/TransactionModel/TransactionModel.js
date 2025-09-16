@@ -1,5 +1,5 @@
 const mongoose=require("mongoose")
-
+require("dotenv").config()
 const BaseSchema = new mongoose.Schema(
   {
       shopkeeperId:{
@@ -62,7 +62,7 @@ const InvoiceSchema = new mongoose.Schema({
 
 const PaymentSchema = new mongoose.Schema({
   RecieptNo:{
-    type: Number,
+    type: String,
     required: true,
   },
   payment:{
