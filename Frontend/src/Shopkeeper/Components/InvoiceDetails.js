@@ -107,8 +107,8 @@ const InvoiceDetails = ({data}) => {
                                 <div className="col-lg-4">
                                     <div className="mt-sm-0 mt-3">
                                         <div className="mb-4">
-                                            <img src="assets/images/logo-dark.png" className="card-logo card-logo-dark" alt="logo dark" height={17} />
-                                            <img src="assets/images/logo-light.png" className="card-logo card-logo-light" alt="logo light" height={17} />
+                                            <img src="assets/images/Quickbill.png" className="card-logo card-logo-dark" alt="logo dark" height={17} />
+                                            <img src="assets/images/Quickbill.png" className="card-logo card-logo-light" alt="logo light" height={17} />
                                         </div>
                                         <h6 className="text-muted text-uppercase fw-semibold">From :-</h6>
                                         <p className="text-muted mb-1" id="address-details">{shopkeeper?.name}</p>
